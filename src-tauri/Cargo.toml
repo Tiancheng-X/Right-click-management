@@ -1,0 +1,31 @@
+[package]
+name = "right-click-manager"
+version = "0.1.0"
+description = "Windows 11 右键菜单管理器"
+authors = ["Tiancheng Huang"]
+edition = "2021"
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "right_click_manager_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+winreg = { version = "0.56", features = ["serde"] }
+rfd = "0.15"
+roxmltree = "0.20"
+windows = { version = "0.61", features = ["ApplicationModel", "Management_Deployment"] }
+image = { version = "0.25", default-features = false, features = ["png"] }
+base64 = "0.22"
+
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3", features = ["shellapi", "wingdi", "winuser", "winreg"] }

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="/src/styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>右键菜单管家</title>
+    <script type="module" src="/src/main.ts" defer></script>
+  </head>
+  <body>
+    <!-- 静态骨架：JS 只做局部更新（卡片展开就地换类，绝不整页重绘） -->
+    <div class="app-container">
+      <header>
+        <div class="title-group">
+          <div class="app-icon">右</div>
+          <h1>右键菜单管家</h1>
+        </div>
+        <span class="flex"></span>
+        <button class="btn" id="rescan" type="button">重新扫描</button>
+        <div class="search-box">
+          <span class="search-icon" aria-hidden="true">🔍</span>
+          <input type="search" class="search-input" id="q" placeholder="搜索右键菜单项..." autocomplete="off" />
+        </div>
+      </header>
+
+      <div class="main-content">
+        <aside>
+          <nav id="nav-items" aria-label="挂载点筛选"></nav>
+          <div class="classic-card">
+            <div class="cc-head">
+              <span>🍃 一键切回经典菜单</span>
+              <label class="switch" title="开启 = Win10 式完整菜单；系统更新可能使其失效，重新开启即可">
+                <input id="classic-toggle" type="checkbox" />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="cc-desc">嫌 Win11 新菜单藏得深？切回完整经典菜单。需重启资源管理器生效。</div>
+          </div>
+          <button class="pending-pill" id="pending" type="button" hidden>⟳ 有改动待生效 · 点击重启</button>
+        </aside>
+
+        <section class="panel">
+          <div class="section-header">
+            <span class="section-title" id="category-title">全部条目</span>
+            <span class="flex"></span>
+            <button class="btn" id="snap-manual" type="button" hidden title="把当前全部受管键拍成一个手动快照点">📷 手动快照</button>
+            <button class="btn" id="add-new" type="button">+ 新增菜单项</button>
+          </div>
+          <div class="menu-list" id="list" role="list"></div>
+        </section>
+      </div>
+
+      <footer>
+        <span class="status-group"><span class="dot" id="status-dot"></span><span id="status">正在扫描…</span></span>
+        <span id="footer-count"></span>
+      </footer>
+    </div>
+    <div class="toasts" id="toasts" aria-live="polite"></div>
+    <div class="smoke" id="modal" hidden>
+      <div class="dialog">
+        <h2 id="modal-title">新增菜单项</h2>
+        <div class="f-label">名称</div>
+        <input class="f-input" id="f-name" placeholder="如：用 XX 打开" />
+        <div class="f-label">命令行</div>
+        <input class="f-input mono" id="f-cmd" placeholder='"C:\path\app.exe" "%1"' />
+        <div class="f-label">图标（exe / dll / ico 路径，可选；编辑时留空保持不变）</div>
+        <div class="icon-row">
+          <input class="f-input mono" id="f-icon" placeholder="C:\path\app.exe" />
+          <button class="btn tiny" id="f-icon-pick" type="button">选择…</button>
+          <span class="item-icon" id="f-preview"></span>
+        </div>
+        <div class="f-label">适用场景</div>
+        <div class="seg" id="f-scene">
+          <div class="seg-item sel" data-v="file">📄 文件右键</div>
+          <div class="seg-item" data-v="desktop">🖥️ 桌面右键</div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn" id="modal-cancel" type="button">取消</button>
+          <button class="btn accent" id="modal-save" type="button">保存</button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

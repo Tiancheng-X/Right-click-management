@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<!--
+  ⚠️ PROTOTYPE · 一次性原型，不代表最终代码质量。
+  计划：主界面的三个变体，?variant=A|B|C 切换（悬浮底栏 ←/→ 循环，键盘可用）。
+  回答的问题：Win11 Fluent 风、简体中文的主界面长什么样、顺不顺手。
+  运行：双击本文件即可（无依赖、无网络、无持久化）。
+  注：字体刻意选 Segoe UI Variable / 微软雅黑 —— 这是 Fluent 设计语言的一部分，
+      目标是「与 Windows 11 浑然一体」，属有性格的语境选择而非偷懒。
+-->
+<html lang="zh-CN" data-theme="auto">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>右键菜单管家 · 主界面原型</title>
+<style>
+/* ============ Fluent 令牌 ============ */
+:root{
+  --font-ui:"Segoe UI Variable Text","Segoe UI Variable","Segoe UI","Microsoft YaHei UI",sans-serif;
+  --font-display:"Segoe UI Variable Display","Segoe UI Variable","Segoe UI","Microsoft YaHei UI",sans-serif;
+  --font-mono:"Cascadia Mono","Cascadia Code",Consolas,monospace;
+  --font-icon:"Segoe Fluent Icons","Segoe MDL2 Assets";
+  --r-win:8px; --r-card:8px; --r-ctl:4px;
+  --dur:.22s; --ease:cubic-bezier(.16,1,.3,1);
+}
+html[data-theme="light"]{
+  --bg:#f3f3f3; --layer:rgba(255,255,255,.62); --layer-solid:#fbfbfb;
+  --card:rgba(255,255,255,.72); --hover:rgba(0,0,0,.045); --active:rgba(0,0,0,.075);
+  --stroke:rgba(0,0,0,.0626); --stroke-strong:rgba(0,0,0,.096);
+  --txt:#1b1b1b; --txt-2:rgba(0,0,0,.606); --txt-3:rgba(0,0,0,.446);
+  --accent:#005fb8; --accent-hover:#1975c5; --accent-txt:#ffffff; --accent-soft:rgba(0,95,184,.09);
+  --danger:#c42b1c; --danger-soft:rgba(196,43,28,.09); --warn:#9d5d00; --warn-soft:rgba(157,93,0,.10);
+  --ok:#0f7b0f; --pill:#ffffff; --shadow:0 8px 24px rgba(0,0,0,.14),0 2px 6px rgba(0,0,0,.08);
+  --mica1:radial-gradient(1200px 700px at 8% -10%,rgba(0,120,215,.14),transparent 60%);
+  --mica2:radial-gradient(900px 600px at 100% 110%,rgba(166,216,255,.20),transparent 55%);
+}
+html[data-theme="dark"]{
+  --bg:#202020; --layer:rgba(58,58,58,.57); --layer-solid:#2b2b2b;
+  --card:rgba(255,255,255,.052); --hover:rgba(255,255,255,.06); --active:rgba(255,255,255,.035);
+  --stroke:rgba(255,255,255,.0837); --stroke-strong:rgba(255,255,255,.1404);
+  --txt:#ffffff; --txt-2:rgba(255,255,255,.786); --txt-3:rgba(255,255,255,.544);
+  --accent:#4cc2ff; --accent-hover:#47b1e8; --accent-txt:#003a5c; --accent-soft:rgba(76,194,255,.10);
+  --danger:#ff99a4; --danger-soft:rgba(255,153,164,.10); --warn:#fcc02d; --warn-soft:rgba(252,192,45,.10);
+  --ok:#6ccb5f; --pill:#2b2b2b; --shadow:0 8px 24px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.4);
+  --mica1:radial-gradient(1200px 700px at 8% -10%,rgba(76,194,255,.10),transparent 60%);
+  --mica2:radial-gradient(900px 600px at 100% 110%,rgba(163,124,255,.10),transparent 55%);
+}
+@media (prefers-color-scheme:dark){ html[data-theme="auto"]{
+  --bg:#202020; --layer:rgba(58,58,58,.57); --layer-solid:#2b2b2b;
+  --card:rgba(255,255,255,.052); --hover:rgba(255,255,255,.06); --active:rgba(255,255,255,.035);
+  --stroke:rgba(255,255,255,.0837); --stroke-strong:rgba(255,255,255,.1404);
+  --txt:#ffffff; --txt-2:rgba(255,255,255,.786); --txt-3:rgba(255,255,255,.544);
+  --accent:#4cc2ff; --accent-hover:#47b1e8; --accent-txt:#003a5c; --accent-soft:rgba(76,194,255,.10);
+  --danger:#ff99a4; --danger-soft:rgba(255,153,164,.10); --warn:#fcc02d; --warn-soft:rgba(252,192,45,.10);
+  --ok:#6ccb5f; --pill:#2b2b2b; --shadow:0 8px 24px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.4);
+  --mica1:radial-gradient(1200px 700px at 8% -10%,rgba(76,194,255,.10),transparent 60%);
+  --mica2:radial-gradient(900px 600px at 100% 110%,rgba(163,124,255,.10),transparent 55%);
+}}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--font-ui);font-size:14px;color:var(--txt);background:var(--bg);
+  background-image:var(--mica1),var(--mica2);overflow:hidden;
+}
+/* 细腻噪点，模拟 Mica 质感 */
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.028;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");}
+::selection{background:var(--accent-soft)}
+.i{font-family:var(--font-icon);font-size:16px;line-height:1;font-style:normal}
+.mono{font-family:var(--font-mono);font-size:12px}
+
+/* ============ 窗口骨架 ============ */
+.window{height:100vh;display:flex;flex-direction:column;padding:10px 10px 0}
+.wframe{flex:1;min-height:0;background:var(--layer);backdrop-filter:blur(40px) saturate(1.4);
+  border:1px solid var(--stroke);border-radius:var(--r-win);box-shadow:0 16px 48px rgba(0,0,0,.12);
+  display:flex;flex-direction:column;overflow:hidden;animation:winIn .5s var(--ease)}
+@keyframes winIn{from{opacity:0;transform:translateY(14px) scale(.99)}to{opacity:1;transform:none}}
+.titlebar{height:44px;display:flex;align-items:center;gap:10px;padding:0 12px;flex:none;
+  border-bottom:1px solid transparent}
+.titlebar .appicon{width:18px;height:18px;border-radius:4px;background:linear-gradient(135deg,var(--accent),#8a2be2);
+  display:grid;place-items:center;color:#fff;font-size:11px;font-weight:600}
+.titlebar .appname{font-family:var(--font-display);font-weight:600;font-size:13px}
+.titlebar .spacer{flex:1}
+.wincaps{display:flex;gap:2px;margin-right:-6px}
+.wincaps .cap{width:44px;height:32px;display:grid;place-items:center;border-radius:var(--r-ctl);color:var(--txt-2)}
+.wincaps .cap.close:hover{background:#c42b1c;color:#fff}
+
+/* ============ Fluent 控件 ============ */
+.btn{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 14px;border-radius:var(--r-ctl);
+  border:1px solid var(--stroke-strong);background:var(--card);color:var(--txt);font:inherit;font-size:14px;
+  cursor:pointer;transition:background var(--dur),border-color var(--dur)}
+.btn:hover{background:var(--hover)}
+.btn:active{background:var(--active);color:var(--txt-2)}
+.btn.accent{background:var(--accent);border-color:transparent;color:var(--accent-txt);font-weight:600}
+.btn.accent:hover{background:var(--accent-hover)}
+.btn.danger{color:var(--danger);border-color:var(--danger)}
+.btn.danger:hover{background:var(--danger-soft)}
+.btn.subtle{border-color:transparent;background:transparent}
+.btn.subtle:hover{background:var(--hover)}
+.btn.sm{height:28px;padding:0 10px;font-size:13px}
+.iconbtn{width:32px;height:32px;display:grid;place-items:center;border-radius:var(--r-ctl);border:none;
+  background:transparent;color:var(--txt-2);cursor:pointer}
+.iconbtn:hover{background:var(--hover);color:var(--txt)}
+.searchbox{display:flex;align-items:center;gap:8px;height:32px;padding:0 10px;min-width:200px;
+  border-radius:var(--r-ctl);border:1px solid var(--stroke-strong);background:var(--card)}
+.searchbox:focus-within{border-bottom:2px solid var(--accent)}
+.searchbox input{flex:1;border:none;outline:none;background:transparent;color:var(--txt);font:inherit}
+.searchbox .i{color:var(--txt-3);font-size:14px}
+/* 开关（Fluent toggle） */
+.tgl{position:relative;width:40px;height:20px;border-radius:10px;border:1px solid var(--stroke-strong);
+  background:transparent;cursor:pointer;transition:background var(--dur),border-color var(--dur);flex:none}
+.tgl::after{content:"";position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;
+  background:var(--txt-2);transition:all var(--dur) var(--ease)}
+.tgl:hover::after{transform:scale(1.15)}
+.tgl.on{background:var(--accent);border-color:var(--accent)}
+.tgl.on::after{left:23px;background:var(--accent-txt)}
+.tgl.sm{transform:scale(.92)}
+/* 徽章 */
+.badge{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:10px;
+  font-size:11.5px;border:1px solid var(--stroke);background:var(--card);color:var(--txt-2);white-space:nowrap}
+.badge.acc{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.badge.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.badge.dang{background:var(--danger-soft);color:var(--danger);border-color:transparent}
+.badge.ghost{background:transparent}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--ok);flex:none}
+.dot.off{background:var(--txt-3)}
+
+/* ============ 悬浮原型切换底栏（非设计的一部分） ============ */
+.proto-bar{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:999;
+  display:flex;align-items:center;gap:4px;background:#1f1f1f;color:#fff;border:1px solid rgba(255,255,255,.16);
+  border-radius:99px;padding:6px 8px;box-shadow:0 10px 32px rgba(0,0,0,.45);font-size:12.5px}
+.proto-bar button{width:30px;height:30px;border-radius:50%;border:none;background:transparent;color:#fff;
+  cursor:pointer;display:grid;place-items:center;font-size:14px}
+.proto-bar button:hover{background:rgba(255,255,255,.14)}
+.proto-bar .vlabel{padding:0 8px;min-width:170px;text-align:center;color:#eaeaea;letter-spacing:.2px}
+.proto-bar .sep{width:1px;height:18px;background:rgba(255,255,255,.18);margin:0 4px}
+
+/* ============ Toast ============ */
+.toasts{position:fixed;right:24px;bottom:76px;z-index:998;display:flex;flex-direction:column;gap:10px}
+.toast{display:flex;align-items:center;gap:10px;min-width:280px;max-width:380px;padding:12px 14px;
+  background:var(--layer-solid);border:1px solid var(--stroke);border-left:3px solid var(--accent);
+  border-radius:var(--r-card);box-shadow:var(--shadow);animation:toastIn .35s var(--ease)}
+.toast.warn{border-left-color:var(--warn)}
+@keyframes toastIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+
+/* 列表行进场 */
+.reveal{animation:rowIn .4s var(--ease) both}
+@keyframes rowIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ============ 变体 A：资源管理器三栏 ============ */
+.a-body{flex:1;display:flex;min-height:0}
+.a-nav{width:236px;flex:none;border-right:1px solid var(--stroke);padding:8px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.nav-h{font-size:12px;color:var(--txt-3);padding:12px 12px 6px}
+.nav-it{display:flex;align-items:center;gap:10px;height:36px;padding:0 12px;border-radius:var(--r-ctl);
+  cursor:pointer;position:relative;color:var(--txt-2)}
+.nav-it:hover{background:var(--hover)}
+.nav-it.sel{background:var(--active);color:var(--txt);font-weight:600}
+.nav-it.sel::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:2px;background:var(--accent)}
+.nav-it .i{font-size:15px;color:var(--txt-3)}
+.nav-it.sel .i{color:var(--accent)}
+.nav-it .cnt{margin-left:auto;font-size:11.5px;color:var(--txt-3)}
+.a-main{flex:1;min-width:0;display:flex;flex-direction:column}
+.a-head{padding:14px 20px 10px;display:flex;align-items:center;gap:12px;flex:none}
+.a-head h1{font-family:var(--font-display);font-size:20px;font-weight:600}
+.a-list{flex:1;overflow-y:auto;padding:4px 12px 20px}
+.row{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:var(--r-card);cursor:pointer;
+  border:1px solid transparent}
+.row:hover{background:var(--hover)}
+.row.sel{background:var(--card);border-color:var(--stroke)}
+.row .eic{width:34px;height:34px;border-radius:var(--r-ctl);background:var(--card);border:1px solid var(--stroke);
+  display:grid;place-items:center;font-size:17px;flex:none}
+.row .eic.off{filter:grayscale(1);opacity:.55}
+.row .ename{font-weight:600;font-size:13.5px;display:flex;align-items:center;gap:8px;min-width:0}
+.row .ename .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .emeta{font-size:11.5px;color:var(--txt-3);display:flex;gap:6px;align-items:center;margin-top:1px}
+.row .grow{flex:1;min-width:0}
+.row .acts{display:flex;gap:4px;align-items:center;opacity:0;transition:opacity var(--dur)}
+.row:hover .acts,.row.sel .acts{opacity:1}
+.confirm-inline{display:flex;gap:6px;align-items:center;font-size:12.5px;color:var(--danger)}
+.a-detail{width:330px;flex:none;border-left:1px solid var(--stroke);padding:18px;overflow-y:auto}
+.a-detail h2{font-family:var(--font-display);font-size:16px;font-weight:600;margin:12px 0 2px}
+.d-field{margin-top:14px}
+.d-field .lb{font-size:11.5px;color:var(--txt-3);margin-bottom:4px}
+.d-field .vl{font-size:13px;line-height:1.5}
+.d-field .vl.code{background:var(--card);border:1px solid var(--stroke);border-radius:var(--r-ctl);
+  padding:8px 10px;word-break:break-all}
+.d-actions{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap}
+.banner{display:flex;align-items:center;gap:10px;margin:10px 20px 0;padding:10px 14px;border-radius:var(--r-card);
+  background:var(--accent-soft);border:1px solid transparent;font-size:13px}
+
+/* ============ 变体 B：卡片墙 ============ */
+.b-body{flex:1;overflow-y:auto;padding:0 36px 90px}
+.b-hero{display:flex;gap:24px;align-items:stretch;padding:26px 0 20px;flex-wrap:wrap}
+.b-hero .title{flex:1;min-width:280px}
+.b-hero h1{font-family:var(--font-display);font-size:30px;font-weight:600;letter-spacing:-.3px}
+.b-hero .sub{color:var(--txt-2);margin-top:6px;font-size:14px}
+.b-hero .stats{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.b-classic{width:340px;flex:none;background:var(--card);border:1px solid var(--stroke);border-radius:var(--r-card);
+  padding:18px;box-shadow:0 4px 16px rgba(0,0,0,.06)}
+.b-classic h3{font-size:14.5px;font-weight:600;display:flex;align-items:center;gap:8px}
+.b-classic p{font-size:12.5px;color:var(--txt-2);margin:6px 0 12px;line-height:1.55}
+.b-tabs{display:flex;gap:6px;border-bottom:1px solid var(--stroke);margin-bottom:18px}
+.b-tab{padding:9px 16px;font-size:14px;color:var(--txt-2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.b-tab:hover{color:var(--txt)}
+.b-tab.sel{color:var(--txt);font-weight:600;border-bottom-color:var(--accent)}
+.b-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.appcard{background:var(--card);border:1px solid var(--stroke);border-radius:var(--r-card);padding:16px;
+  transition:transform var(--dur) var(--ease),box-shadow var(--dur)}
+.appcard:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.appcard .hd{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.appcard .apic{width:40px;height:40px;border-radius:var(--r-ctl);font-size:21px;display:grid;place-items:center;
+  background:var(--layer-solid);border:1px solid var(--stroke)}
+.appcard .hd .t{font-weight:600;font-size:14.5px}
+.appcard .hd .s{font-size:11.5px;color:var(--txt-3)}
+.appcard.warncard{border-color:var(--danger);background:var(--danger-soft)}
+.etile{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r-ctl);cursor:pointer;font-size:13px}
+.etile:hover{background:var(--hover)}
+.etile .grow{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* ContentDialog */
+.smoke{position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(2px);z-index:600;
+  display:grid;place-items:center;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}}
+.dialog{width:480px;max-height:80vh;overflow-y:auto;background:var(--layer-solid);border:1px solid var(--stroke);
+  border-radius:var(--r-win);box-shadow:var(--shadow);padding:22px;animation:dlgIn .3s var(--ease)}
+@keyframes dlgIn{from{opacity:0;transform:scale(.96) translateY(10px)}to{opacity:1;transform:none}}
+.fab{position:fixed;right:36px;bottom:80px;z-index:500;height:44px;border-radius:22px;padding:0 20px;
+  background:var(--accent);color:var(--accent-txt);border:none;font:inherit;font-weight:600;font-size:14px;
+  cursor:pointer;box-shadow:var(--shadow);display:flex;align-items:center;gap:8px;transition:transform var(--dur) var(--ease)}
+.fab:hover{transform:scale(1.04)}
+
+/* ============ 变体 C：工作台 ============ */
+.c-body{flex:1;display:flex;flex-direction:column;min-height:0}
+.c-toolbar{display:flex;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid var(--stroke);flex:none;flex-wrap:wrap}
+.c-tabs{display:flex;gap:2px;background:var(--card);border:1px solid var(--stroke);border-radius:var(--r-ctl);padding:2px}
+.c-tab{padding:5px 14px;border-radius:3px;font-size:13px;color:var(--txt-2);cursor:pointer}
+.c-tab:hover{color:var(--txt)}
+.c-tab.sel{background:var(--layer-solid);color:var(--txt);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.c-table{flex:1;overflow-y:auto;padding:6px 18px 20px}
+table.grid{width:100%;border-collapse:collapse}
+table.grid th{position:sticky;top:0;background:var(--bg);z-index:2;text-align:left;font-size:11.5px;
+  color:var(--txt-3);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--stroke)}
+table.grid td{padding:8px 10px;border-bottom:1px solid var(--stroke);font-size:13px;vertical-align:middle}
+table.grid tr.tr{cursor:pointer}
+table.grid tr.tr:hover td{background:var(--hover)}
+table.grid tr.sel td{background:var(--accent-soft)}
+td .nmcell{display:flex;align-items:center;gap:10px;font-weight:600;font-size:13px}
+td .nmcell .eic{width:28px;height:28px;border-radius:var(--r-ctl);background:var(--card);border:1px solid var(--stroke);
+  display:grid;place-items:center;font-size:14px;flex:none}
+td .nmcell .eic.off{filter:grayscale(1);opacity:.55}
+td.mount{font-family:var(--font-mono);font-size:11.5px;color:var(--txt-2)}
+.cbox{width:16px;height:16px;border-radius:3px;border:1px solid var(--stroke-strong);display:inline-grid;
+  place-items:center;cursor:pointer;background:var(--card);color:transparent;font-size:10px}
+.cbox.on{background:var(--accent);border-color:var(--accent);color:var(--accent-txt)}
+.batchbar{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);z-index:550;display:flex;gap:8px;
+  align-items:center;background:var(--layer-solid);border:1px solid var(--stroke);border-radius:99px;
+  padding:8px 10px 8px 18px;box-shadow:var(--shadow);animation:toastIn .3s var(--ease)}
+.drawer{position:fixed;top:0;right:-420px;width:400px;height:100vh;z-index:560;background:var(--layer-solid);
+  border-left:1px solid var(--stroke);box-shadow:var(--shadow);transition:right .3s var(--ease);
+  padding:20px;overflow-y:auto}
+.drawer.open{right:0}
+.drawer .dh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.drawer h2{font-family:var(--font-display);font-size:17px;font-weight:600}
+
+/* 快照时间线（A 页面 / B 卡片 / C 抽屉共用样式） */
+.snap{display:flex;gap:14px;padding:14px 16px;border-radius:var(--r-card);background:var(--card);
+  border:1px solid var(--stroke);margin-bottom:10px;align-items:center}
+.snap .when{width:150px;flex:none;font-size:12px;color:var(--txt-3)}
+.snap .what{flex:1;font-size:13px}
+.snap .what b{font-weight:600}
+.snap .keys{font-size:11.5px;color:var(--txt-3)}
+.empty{padding:60px 0;text-align:center;color:var(--txt-3);font-size:13px}
+</style>
+</head>
+<body>
+<div id="mount"></div>
+<div class="toasts" id="toasts"></div>
+
+<div class="proto-bar">
+  <button onclick="cycle(-1)" title="上一个变体">←</button>
+  <div class="vlabel" id="vlabel"></div>
+  <button onclick="cycle(1)" title="下一个变体">→</button>
+  <div class="sep"></div>
+  <button onclick="flipTheme()" id="themebtn" title="深浅色切换">◐</button>
+</div>
+
+<script>
+/* ================= 共享 mock 数据（源自 T1/T2/T3 调研的真实结构） ================= */
+const TYPES={shellex:"shellex 处理器",verb:"静态动词",sys:"系统内置",pkg:"打包 (MSIX)",custom:"自定义"};
+const ENTRIES=[
+ {id:"7z", name:"7-Zip 压缩 / 解压", emoji:"📦", type:"shellex", src:"7-Zip", mount:"* · Folder · Drive", scenes:["文件","文件夹","驱动器"], reg:"HKCR\\*\\shellex\\ContextMenuHandlers\\7-Zip", cmd:'"C:\\Program Files\\7-Zip\\7zG.exe" x "%1"', on:true, dead:false},
+ {id:"vsc", name:"用 Code 打开", emoji:"🧩", type:"verb", src:"VS Code", mount:"* · Directory", scenes:["文件","文件夹"], reg:"HKCU\\Software\\Classes\\*\\shell\\VSCode", cmd:'"C:\\Program Files\\Microsoft VS Code\\Code.exe" "%1"', on:true, dead:false},
+ {id:"wx", name:"通过微信发送", emoji:"💬", type:"verb", src:"微信", mount:"*", scenes:["文件"], reg:"HKCU\\Software\\Classes\\*\\shell\\WeChat", cmd:'"D:\\WeChat\\WeChat.exe" "%1"', on:true, dead:false},
+ {id:"term", name:"在终端中打开", emoji:"⌨️", type:"sys", src:"Windows", mount:"Directory\\Background", scenes:["文件夹","桌面背景"], reg:"HKCR\\Directory\\Background\\shell\\OpenTerminal", cmd:'wt.exe -d "%V"', on:true, dead:false},
+ {id:"1drv", name:"始终保留在此设备", emoji:"☁️", type:"pkg", src:"OneDrive", mount:"* (打包清单)", scenes:["文件"], reg:"MSIX · desktop4:FileExplorerContextMenus", cmd:"(打包命令)", on:true, dead:false},
+ {id:"gpu", name:"图形属性", emoji:"🎛️", type:"shellex", src:"显卡驱动", mount:"* · DesktopBackground", scenes:["文件","桌面背景"], reg:"HKCR\\*\\shellex\\ContextMenuHandlers\\Graphics", cmd:"igfxDHLauncher.exe", on:false, dead:false},
+ {id:"oppo", name:"Oppo 互联分享", emoji:"📱", type:"verb", src:"手机互联", mount:"*", scenes:["文件"], reg:"HKCU\\Software\\Classes\\*\\shell\\OppoConnectShare", cmd:'"D:\\Oppo\\OppoConnect.exe" "%1"', on:false, dead:false},
+ {id:"accx", name:"AccExt 壳扩展", emoji:"🧷", type:"shellex", src:"系统组件", mount:"*", scenes:["文件"], reg:"HKCR\\*\\shellex\\ContextMenuHandlers\\AccExt-", cmd:"CLSID 尾随“-”，已失效", on:true, dead:true, warn:"CLSID 指向无效（尾随“-”），属禁用或残留"},
+ {id:"kz", name:"快压清理助手", emoji:"🗑️", type:"verb", src:"快压（已卸载）", mount:"*", scenes:["文件"], reg:"HKCU\\Software\\Classes\\*\\shell\\KuaizipCleanup", cmd:"C:\\Program Files (x86)\\Kuaizip\\cleanup.exe（不存在）", on:true, dead:true, warn:"命令指向的程序不存在，疑似卸载残留"},
+ {id:"myvsc", name:"用 Code 打开文件夹", emoji:"⭐", type:"custom", src:"我创建的", mount:"Directory", scenes:["文件夹"], reg:"HKCU\\Software\\Classes\\Directory\\shell\\OpenWithCode", cmd:'"C:\\Program Files\\Microsoft VS Code\\Code.exe" "%V"', on:true, dead:false},
+];
+const SNAPSHOTS=[
+ {when:"今天 14:32", what:"禁用「通过微信发送」", keys:"已快照 2 个注册表键"},
+ {when:"今天 09:15", what:"删除「快压清理助手」", keys:"已导出 .reg 备份 · 3 个键"},
+ {when:"昨天 20:03", what:"一键切回经典菜单", keys:"CLSID {86ca1aa0-…} · 1 个键"},
+ {when:"昨天 08:47", what:"新增自定义项「用 Code 打开文件夹」", keys:"已快照 3 个键"},
+ {when:"3 天前", what:"还原至「06-12 21:10」", keys:"写回 14 个键"},
+];
+const SCENES=["全部","文件","文件夹","桌面背景","驱动器"];
+const SOURCES=[...new Set(ENTRIES.map(e=>e.src))];
+const VNAME={A:"资源管理器三栏",B:"卡片墙",C:"高密度工作台"};
+
+/* ================= 全局状态（内存即弃） ================= */
+const S={variant:"A",scene:"全部",src:"全部",q:"",sel:null,page:"entries",dialog:null,
+         drawer:false,checked:new Set(),classic:false,confirmDel:null,confirmBatch:false};
+const $=s=>document.querySelector(s);
+const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
+const E=id=>ENTRIES.find(e=>e.id===id);
+const vis=()=>ENTRIES.filter(e=>(S.scene==="全部"||e.scenes.includes(S.scene))&&(S.src==="全部"||e.src===S.src)
+  &&(!S.q||e.name.toLowerCase().includes(S.q.toLowerCase())||e.src.toLowerCase().includes(S.q.toLowerCase())));
+
+function toast(msg,warn){const t=document.createElement("div");t.className="toast"+(warn?" warn":"");
+  t.innerHTML=`<span class="i">ℹ</span><span>${msg}</span>`;$("#toasts").append(t);
+  setTimeout(()=>{t.style.opacity="0";t.style.transition="opacity .3s";setTimeout(()=>t.remove(),320)},3200);}
+
+/* ================= 控件片段 ================= */
+function tgl(id,on){return `<span class="tgl${on?" on":""}" data-action="toggle" data-id="${id}" role="switch" aria-checked="${on}"></span>`}
+function badge(e){return `<span class="badge ${e.dead?"dang":e.type==="custom"?"acc":""}">${e.dead?"⚠ 可疑":TYPES[e.type]}</span>`}
+function eic(e){return `<span class="eic${e.on?"":" off"}">${e.emoji}</span>`}
+
+/* ================= 变体 A：资源管理器三栏 ================= */
+function renderA(){
+  const list=vis();
+  const row=e=>`
+   <div class="row reveal ${S.sel===e.id?"sel":""}" data-action="select" data-id="${e.id}" style="animation-delay:${list.indexOf(e)*30}ms">
+     ${eic(e)}
+     <div class="grow">
+       <div class="ename"><span class="nm">${esc(e.name)}</span>${badge(e)}</div>
+       <div class="emeta"><span class="dot${e.on?"":" off"}"></span>${e.src} · ${e.scenes.join(" / ")}</div>
+     </div>
+     <div class="acts">${S.confirmDel===e.id
+       ?`<span class="confirm-inline">删除？<button class="btn sm danger" data-action="do-del" data-id="${e.id}">确认</button><button class="btn sm" data-action="cancel-del">取消</button></span>`
+       :`${tgl(e.id,e.on)}<button class="iconbtn" data-action="ask-del" data-id="${e.id}" title="删除"><span class="i">🗑</span></button>`}</div>
+   </div>`;
+  const d=S.sel&&E(S.sel);
+  const detail=!d?`<div class="empty">← 选择一个条目查看详情</div>`:`
+    <div style="font-size:34px">${d.emoji}</div>
+    <h2>${esc(d.name)}</h2>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+      <span class="dot${d.on?"":" off"}"></span><span style="font-size:13px">${d.on?"已启用":"已禁用"}</span>${tgl(d.id,d.on)}
+    </div>
+    ${d.warn?`<div class="d-field"><div class="vl" style="background:var(--danger-soft);border-radius:6px;padding:10px;color:var(--danger)">⚠ ${d.warn}</div></div>`:""}
+    <div class="d-field"><div class="lb">类型</div><div class="vl">${TYPES[d.type]}</div></div>
+    <div class="d-field"><div class="lb">来源</div><div class="vl">${d.src}</div></div>
+    <div class="d-field"><div class="lb">挂载点</div><div class="vl">${d.mount}</div></div>
+    <div class="d-field"><div class="lb">适用场景</div><div class="vl">${d.scenes.join("、")}</div></div>
+    <div class="d-field"><div class="lb">注册表位置</div><div class="vl code mono">${d.reg}</div></div>
+    <div class="d-field"><div class="lb">命令行</div><div class="vl code mono">${esc(d.cmd)}</div></div>
+    <div class="d-actions">
+      ${S.confirmDel===d.id
+        ?`<span class="confirm-inline">删除？<button class="btn sm danger" data-action="do-del" data-id="${d.id}">确认删除</button><button class="btn sm" data-action="cancel-del">取消</button></span>`
+        :`<button class="btn danger" data-action="ask-del" data-id="${d.id}"><span class="i">🗑</span> 删除</button>
+          <button class="btn" data-action="snapshot-now"><span class="i">🗄</span> 手动快照</button>`}
+    </div>`;
+  const navScene=SCENES.map(s=>`<div class="nav-it ${S.page==="entries"&&S.scene===s?"sel":""}" data-action="a-scene" data-v="${s}"><span class="i">📂</span>${s}<span class="cnt">${s==="全部"?ENTRIES.length:ENTRIES.filter(e=>e.scenes.includes(s)).length}</span></div>`).join("");
+  const navSrc=`<div class="nav-it ${S.page==="entries"&&S.src==="全部"?"sel":""}" data-action="a-src" data-v="全部"><span class="i">🌐</span>全部来源</div>`+
+    SOURCES.map(s=>`<div class="nav-it ${S.page==="entries"&&S.src===s?"sel":""}" data-action="a-src" data-v="${s}"><span class="i">▪</span>${s}</div>`).join("");
+  const main=S.page==="history"?`
+    <div class="a-head"><h1>快照历史</h1></div>
+    <div class="a-list">${SNAPSHOTS.map(s=>`
+      <div class="snap"><span class="when">${s.when}</span>
+        <span class="what"><b>${s.what}</b><div class="keys">${s.keys}</div></span>
+        <button class="btn sm" data-action="restore">还原至此</button></div>`).join("")}
+      <div class="empty">每次改动前自动快照 · 也可手动快照</div></div>`
+   :`<div class="a-head"><h1>${S.scene==="全部"?"全部条目":S.scene}${S.src!=="全部"?" · "+S.src:""} <span style="color:var(--txt-3);font-size:14px;font-weight:400">${list.length}</span></h1>
+      <div class="spacer" style="flex:1"></div>
+      <div class="searchbox"><span class="i">🔍</span><input placeholder="搜索条目" value="${esc(S.q)}" data-role="search"></div>
+      <button class="btn accent" data-action="add-new"><span class="i">＋</span>新建菜单项</button></div>
+      <div class="a-list">${list.map(row).join("")||`<div class="empty">没有匹配的条目</div>`}</div>`;
+  return `
+  <div class="window"><div class="wframe">
+    <div class="titlebar"><span class="appicon">右</span><span class="appname">右键菜单管家</span>
+      <span class="spacer"></span>
+      <span style="font-size:12.5px;color:var(--txt-2)">切回经典菜单</span>${tgl("classic",S.classic)}
+      <span class="wincaps"><span class="cap">—</span><span class="cap">▢</span><span class="cap close">✕</span></span>
+    </div>
+    ${S.classic?`<div class="banner"><span class="i">ℹ</span>已切换为经典完整菜单，重启资源管理器后生效。<button class="btn sm accent" data-action="restart-explorer" style="margin-left:auto">立即重启</button></div>`:""}
+    <div class="a-body">
+      <div class="a-nav">
+        <div class="nav-h">场景</div>${navScene}
+        <div class="nav-h">来源</div>${navSrc}
+        <div style="flex:1"></div>
+        <div class="nav-it ${S.page==="history"?"sel":""}" data-action="a-page" data-v="history"><span class="i">🕘</span>快照历史<span class="cnt">${SNAPSHOTS.length}</span></div>
+        <div class="nav-it"><span class="i">⚙</span>设置</div>
+      </div>
+      <div class="a-main">${main}</div>
+      <div class="a-detail">${detail}</div>
+    </div>
+  </div></div>`;
+}
+
+/* ================= 变体 B：卡片墙 ================= */
+function renderB(){
+  const list=vis();
+  const bySrc={};list.forEach(e=>{(bySrc[e.src]=bySrc[e.src]||[]).push(e)});
+  const dialogE=S.dialog&&E(S.dialog);
+  const dlg=dialogE?`<div class="smoke" data-action="close-dialog"><div class="dialog" onclick="event.stopPropagation()">
+    <div style="font-size:36px">${dialogE.emoji}</div>
+    <h2 style="font-family:var(--font-display);font-size:18px;font-weight:600;margin:10px 0 4px">${esc(dialogE.name)}</h2>
+    <div style="display:flex;gap:8px;margin:8px 0 4px">${badge(dialogE)}<span class="badge ghost">${dialogE.on?"● 启用中":"○ 已禁用"}</span></div>
+    ${dialogE.warn?`<div style="margin-top:10px;background:var(--danger-soft);border-radius:6px;padding:10px;color:var(--danger);font-size:13px">⚠ ${dialogE.warn}</div>`:""}
+    <div class="d-field"><div class="lb">挂载点</div><div class="vl">${dialogE.mount}</div></div>
+    <div class="d-field"><div class="lb">注册表位置</div><div class="vl code mono" style="background:var(--card);border:1px solid var(--stroke);border-radius:6px;padding:8px 10px">${dialogE.reg}</div></div>
+    <div class="d-field"><div class="lb">命令行</div><div class="vl code mono" style="background:var(--card);border:1px solid var(--stroke);border-radius:6px;padding:8px 10px">${esc(dialogE.cmd)}</div></div>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:18px">
+      <span style="font-size:13px">${dialogE.on?"启用":"禁用"}</span>${tgl(dialogE.id,dialogE.on)}
+      <span style="flex:1"></span>
+      ${S.confirmDel===dialogE.id
+        ?`<span class="confirm-inline">删除？<button class="btn sm danger" data-action="do-del" data-id="${dialogE.id}">确认</button><button class="btn sm" data-action="cancel-del">取消</button></span>`
+        :`<button class="btn danger sm" data-action="ask-del" data-id="${dialogE.id}">删除</button>`}
+      <button class="btn sm" data-action="close-dialog">关闭</button>
+    </div></div></div>`:"";
+  const manage=S.page==="entries"?`
+    <div class="b-grid">${Object.entries(bySrc).map(([src,es])=>`
+      <div class="appcard ${es.some(e=>e.dead)?"warncard":""}">
+        <div class="hd"><span class="apic">${es[0].emoji}</span>
+          <div><div class="t">${src}</div><div class="s">${es.length} 个条目 · ${es.filter(e=>e.on).length} 个启用</div></div></div>
+        ${es.map(e=>`<div class="etile" data-action="open-dialog" data-id="${e.id}">
+            <span>${e.emoji}</span><span class="grow">${esc(e.name)}</span>
+            ${e.dead?'<span class="badge dang">可疑</span>':""}
+            <span class="dot${e.on?"":" off"}"></span></div>`).join("")}
+      </div>`).join("")}</div>`
+   :`<div class="b-grid" style="grid-template-columns:repeat(auto-fill,minmax(380px,1fr))">${SNAPSHOTS.map(s=>`
+      <div class="appcard"><div style="font-size:12px;color:var(--txt-3)">${s.when}</div>
+        <div style="font-weight:600;margin:6px 0 2px">${s.what}</div>
+        <div style="font-size:11.5px;color:var(--txt-3);margin-bottom:12px">${s.keys}</div>
+        <button class="btn sm" data-action="restore">还原至此</button></div>`).join("")}</div>`;
+  return `
+  <div class="window"><div class="wframe">
+    <div class="titlebar"><span class="appicon">右</span><span class="appname">右键菜单管家</span><span class="spacer"></span>
+      <span class="wincaps"><span class="cap">—</span><span class="cap">▢</span><span class="cap close">✕</span></span></div>
+    <div class="b-body">
+      <div class="b-hero">
+        <div class="title">
+          <h1>你的右键菜单，干净了</h1>
+          <div class="sub">${ENTRIES.length} 个条目来自 ${new Set(ENTRIES.map(e=>e.src)).size} 个来源 · 其中 ${ENTRIES.filter(e=>e.dead).length} 个疑似残留</div>
+          <div class="stats">
+            <span class="badge acc">${ENTRIES.filter(e=>e.on).length} 个启用</span><span class="badge">${ENTRIES.filter(e=>!e.on).length} 个禁用</span>
+            <span class="badge dang">${ENTRIES.filter(e=>e.dead).length} 个可疑</span><span class="badge ghost">按来源分组管理</span>
+          </div>
+        </div>
+        <div class="b-classic">
+          <h3>🍃 一键切回经典菜单</h3>
+          <p>嫌 Win11 新菜单藏得深？切回 Win10 式完整菜单。非官方手段，系统更新后可能失效，会提供兜底。</p>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:13px">${S.classic?"已切换 · 待重启":"当前新版菜单"}</span>${tgl("classic",S.classic)}
+          </div>
+        </div>
+      </div>
+      <div class="b-tabs">
+        <div class="b-tab ${S.page==="entries"?"sel":""}" data-action="b-tab" data-v="entries">条目管理</div>
+        <div class="b-tab ${S.page==="history"?"sel":""}" data-action="b-tab" data-v="history">快照历史</div>
+        <div style="flex:1"></div>
+        <div class="searchbox" style="margin-bottom:6px"><span class="i">🔍</span><input placeholder="搜索条目" value="${esc(S.q)}" data-role="search"></div>
+      </div>
+      ${manage}
+    </div>
+    ${S.page==="entries"?`<button class="fab" data-action="add-new"><span class="i">＋</span> 新建菜单项</button>`:""}
+  </div></div>${dlg}`;
+}
+
+/* ================= 变体 C：高密度工作台 ================= */
+function renderC(){
+  const list=vis();
+  const drawerE=S.drawer&&S.drawer!=="history"?E(S.drawer):null;
+  const drawer=drawerE?`<div class="drawer open" onclick="event.stopPropagation()">
+    <div class="dh"><h2>${esc(drawerE.name)}</h2><button class="iconbtn" data-action="close-drawer"><span class="i">✕</span></button></div>
+    <div style="display:flex;gap:8px;margin:6px 0 10px">${badge(drawerE)}<span class="badge ghost">${drawerE.on?"● 启用":"○ 禁用"}</span></div>
+    ${drawerE.warn?`<div style="background:var(--danger-soft);border-radius:6px;padding:10px;color:var(--danger);font-size:13px;margin-bottom:6px">⚠ ${drawerE.warn}</div>`:""}
+    <div class="d-field"><div class="lb">类型 / 来源</div><div class="vl">${TYPES[drawerE.type]} · ${drawerE.src}</div></div>
+    <div class="d-field"><div class="lb">挂载点</div><div class="vl">${drawerE.mount}</div></div>
+    <div class="d-field"><div class="lb">适用场景</div><div class="vl">${drawerE.scenes.join("、")}</div></div>
+    <div class="d-field"><div class="lb">注册表位置</div><div class="vl code mono" style="background:var(--card);border:1px solid var(--stroke);border-radius:6px;padding:8px 10px">${drawerE.reg}</div></div>
+    <div class="d-field"><div class="lb">命令行</div><div class="vl code mono" style="background:var(--card);border:1px solid var(--stroke);border-radius:6px;padding:8px 10px">${esc(drawerE.cmd)}</div></div>
+    <div class="d-actions">
+      ${S.confirmDel===drawerE.id
+        ?`<span class="confirm-inline">删除？<button class="btn sm danger" data-action="do-del" data-id="${drawerE.id}">确认</button><button class="btn sm" data-action="cancel-del">取消</button></span>`
+        :`<button class="btn danger" data-action="ask-del" data-id="${drawerE.id}">删除</button>
+          <button class="btn" data-action="snapshot-now">手动快照</button>`}
+    </div></div>`:S.drawer==="history"?`<div class="drawer open">
+    <div class="dh"><h2>快照历史</h2><button class="iconbtn" data-action="close-drawer"><span class="i">✕</span></button></div>
+    ${SNAPSHOTS.map(s=>`<div class="snap"><span class="when">${s.when}</span>
+      <span class="what"><b>${s.what}</b><div class="keys">${s.keys}</div></span>
+      <button class="btn sm" data-action="restore">还原至此</button></div>`).join("")}
+  </div>`:`<div class="drawer"></div>`;
+  return `
+  <div class="window"><div class="wframe">
+    <div class="c-body">
+      <div class="c-toolbar">
+        <div class="c-tabs">${SCENES.map(s=>`<div class="c-tab ${S.scene===s?"sel":""}" data-action="a-scene" data-v="${s}">${s}</div>`).join("")}</div>
+        <div class="searchbox"><span class="i">🔍</span><input placeholder="搜索条目 / 来源" style="min-width:150px" value="${esc(S.q)}" data-role="search"></div>
+        <span style="flex:1"></span>
+        <span style="font-size:12.5px;color:var(--txt-2)">经典菜单</span>${tgl("classic",S.classic)}
+        <button class="btn sm" data-action="c-history"><span class="i">🕘</span>历史</button>
+        <button class="btn sm accent" data-action="add-new">＋ 新建</button>
+      </div>
+      ${S.classic?`<div class="banner"><span class="i">ℹ</span>已切换为经典完整菜单，重启资源管理器后生效。<button class="btn sm accent" data-action="restart-explorer" style="margin-left:auto">立即重启</button></div>`:""}
+      <div class="c-table">
+        <table class="grid"><thead><tr>
+          <th style="width:34px"><span class="cbox ${S.checked.size&&S.checked.size===list.length?"on":""}" data-action="check-all">✓</span></th>
+          <th>条目</th><th style="width:120px">类型</th><th style="width:110px">来源</th>
+          <th style="width:200px">挂载点</th><th style="width:60px">状态</th><th style="width:50px"></th>
+        </tr></thead><tbody>
+        ${list.map((e,i)=>`<tr class="tr reveal ${S.drawer===e.id?"sel":""}" data-action="open-drawer" data-id="${e.id}" style="animation-delay:${i*25}ms">
+          <td><span class="cbox ${S.checked.has(e.id)?"on":""}" data-action="check" data-id="${e.id}">✓</span></td>
+          <td><span class="nmcell"><span class="eic${e.on?"":" off"}">${e.emoji}</span>${esc(e.name)}${e.dead?' <span class="badge dang">可疑</span>':""}${e.type==="custom"?' <span class="badge acc">自定义</span>':""}</span></td>
+          <td style="color:var(--txt-2);font-size:12px">${TYPES[e.type]}</td>
+          <td style="color:var(--txt-2);font-size:12px">${e.src}</td>
+          <td class="mount">${e.mount}</td>
+          <td>${tgl(e.id,e.on)}</td>
+          <td>${S.confirmDel===e.id
+            ?`<span class="confirm-inline"><button class="btn sm danger" data-action="do-del" data-id="${e.id}">删</button><button class="btn sm" data-action="cancel-del">否</button></span>`
+            :`<button class="iconbtn" data-action="ask-del" data-id="${e.id}"><span class="i">🗑</span></button>`}</td>
+        </tr>`).join("")||`<tr><td colspan="7"><div class="empty">没有匹配的条目</div></td></tr>`}
+        </tbody></table>
+      </div>
+    </div>
+  </div></div>
+  ${S.checked.size?`<div class="batchbar">
+      <b style="font-size:13px">已选 ${S.checked.size} 项</b>
+      <button class="btn sm" data-action="batch" data-v="off">批量禁用</button>
+      <button class="btn sm" data-action="batch" data-v="on">批量启用</button>
+      <button class="btn sm danger" data-action="batch" data-v="del">批量删除</button>
+      <button class="btn sm subtle" data-action="check-clear">取消选择</button>
+    </div>`:""}
+  ${drawer}`;
+}
+
+/* ================= 挂载与路由 ================= */
+const RENDER={A:renderA,B:renderB,C:renderC};
+function rerender(){$("#mount").innerHTML=RENDER[S.variant]();
+  $("#vlabel").textContent=`${S.variant}（${VNAME[S.variant]}） · ${["A","B","C"][( ["A","B","C"].indexOf(S.variant)+1)%3]} 在右`;
+}
+function setVariant(v){S.variant=v;S.page="entries";S.dialog=null;S.drawer=false;S.checked.clear();S.confirmDel=null;
+  history.replaceState(null,"",`?variant=${v}`);rerender();}
+function cycle(d){const ks=["A","B","C"];setVariant(ks[(ks.indexOf(S.variant)+d+3)%3]);}
+
+/* ================= 事件（统一委托，动作内联确认） ================= */
+document.addEventListener("click",e=>{
+  const el=e.target.closest("[data-action]");
+  if(!el)return;
+  const a=el.dataset.action,id=el.dataset.id,v=el.dataset.v;
+  switch(a){
+    case "toggle":{
+      if(id==="classic"){S.classic=!S.classic;toast(S.classic?"已切换为经典菜单，重启资源管理器后生效":"已恢复 Win11 新版菜单",S.classic);}
+      else{const t=E(id);t.on=!t.on;toast(`已${t.on?"启用":"禁用"}「${t.name}」· 改动前已自动快照`);}
+      break;}
+    case "select":S.sel=id;break;
+    case "ask-del":S.confirmDel=id;break;
+    case "cancel-del":S.confirmDel=null;break;
+    case "do-del":{const t=E(id);toast(`已删除「${t.name}」· 已导出 .reg 备份，可在快照历史还原`,true);
+      ENTRIES.splice(ENTRIES.indexOf(t),1);S.confirmDel=null;if(S.sel===id)S.sel=null;
+      if(S.dialog===id)S.dialog=null;if(S.drawer===id)S.drawer=false;S.checked.delete(id);break;}
+    case "a-scene":S.scene=v;S.page="entries";break;
+    case "a-src":S.src=v;S.page="entries";break;
+    case "a-page":case "b-tab":S.page=v;break;
+    case "open-dialog":S.dialog=id;break;
+    case "close-dialog":S.dialog=null;break;
+    case "open-drawer":if(e.target.closest(".cbox,.tgl,button"))return;S.drawer=id;break;
+    case "close-drawer":S.drawer=false;break;
+    case "c-history":S.drawer="history";break;   /* 简化：历史也从抽屉入口看 */
+    case "check":S.checked.has(id)?S.checked.delete(id):S.checked.add(id);break;
+    case "check-all":{const l=vis();if(S.checked.size===l.length)S.checked.clear();else l.forEach(x=>S.checked.add(x.id));break;}
+    case "check-clear":S.checked.clear();break;
+    case "batch":{const n=S.checked.size;
+      if(v==="del"){for(const id2 of [...S.checked]){const t=E(id2);if(t)ENTRIES.splice(ENTRIES.indexOf(t),1);}
+        toast(`已删除 ${n} 个条目 · 已快照`,true);}
+      else{ENTRIES.forEach(t=>{if(S.checked.has(t.id))t.on=(v==="on")});toast(`已批量${v==="on"?"启用":"禁用"} ${n} 个条目`);}
+      S.checked.clear();break;}
+    case "restore":toast("已还原到所选时间点 · 写回快照键",true);break;
+    case "snapshot-now":toast("已手动快照当前注册表相关项");break;
+    case "restart-explorer":toast("模拟：正在重启资源管理器…");break;
+    case "add-new":toast("打开「新建菜单项」向导（原型未实现）");break;
+  }
+  rerender();
+});
+document.addEventListener("input",e=>{
+  if(e.target.matches("[data-role=search]")){S.q=e.target.value;rerender();
+    const inp=document.querySelector("[data-role=search]");if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}}
+});
+document.addEventListener("keydown",e=>{
+  if(e.target.matches("input,textarea,[contenteditable]"))return;
+  if(e.key==="ArrowLeft")cycle(-1);
+  if(e.key==="ArrowRight")cycle(1);
+  if(e.key==="Escape"){S.dialog=null;S.drawer=false;rerender();}
+});
+/* 深浅色：auto → 手动翻转 */
+function flipTheme(){
+  const cur=document.documentElement.dataset.theme;
+  const resolved=cur==="auto"?(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light"):cur;
+  document.documentElement.dataset.theme=resolved==="dark"?"light":"dark";
+  toast("主题已切换（Fluent：跟随系统为默认，此处为原型预览开关）");
+}
+/* 启动：读取 ?variant= */
+const v=new URLSearchParams(location.search).get("variant");
+if(["A","B","C"].includes(v))S.variant=v;
+rerender();
+</script>
+</body>
+</html>
