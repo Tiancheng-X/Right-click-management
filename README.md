@@ -44,7 +44,18 @@ pnpm tauri dev
 pnpm tauri build
 ```
 
-数据目录：exe 同目录 `data\`（便携优先），不可写时回退 `%APPDATA%`。
+产物：`src-tauri\target\release\right-click-manager.exe`（约 9.4 MB 绿色单文件）。
+
+打包配置 `bundle.targets` 当前为空（跳过安装包，避免构建时联网下载 WiX/NSIS 工具）；如需 NSIS/MSI 安装包，把 `tauri.conf.json` 的 `bundle.targets` 改为 `["nsis", "msi"]`（需要能访问 GitHub 下载打包工具）。
+
+## 分享给别人
+
+把 `right-click-manager.exe` 直接发给对方即可（可改名为「右键菜单管家.exe」）：
+
+- 前提：Windows 11（Win10 需装有 WebView2 运行时）
+- 启动会弹 UAC——「始终管理员运行」是程序的设计行为
+- 未签名 exe 会触发 SmartScreen 提示：点「更多信息 → 仍要运行」
+- 数据（快照/设置）生成在 exe 旁的 `data\` 目录，删 exe 即完全卸载
 
 ## 当前状态
 
