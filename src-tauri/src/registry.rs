@@ -257,6 +257,25 @@ fn enum_shellex(
 
 /* ============ 写操作（T10：条目操作接入） ============ */
 
+/// 广播 Shell 关联变更：刷新菜单缓存，让动词/Blocked 类改动免重启即时生效
+/// （桌面会轻微闪一下）；经典菜单开关是进程级 DLL 切换，仍需重启 explorer
+pub fn notify_shell_changed() {
+    #[link(name = "shell32")]
+    extern "system" {
+        fn SHChangeNotify(
+            weventid: u32,
+            uflags: u32,
+            dwitem1: *const std::ffi::c_void,
+            dwitem2: *const std::ffi::c_void,
+        );
+    }
+    const SHCNE_ASSOCCHANGED: u32 = 0x0800_0000;
+    const SHCNF_IDLIST: u32 = 0x0000;
+    unsafe {
+        SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, std::ptr::null(), std::ptr::null());
+    }
+}
+
 fn strip_hkcr(reg_path: &str) -> Result<String, String> {
     reg_path
         .strip_prefix("HKCR\\")

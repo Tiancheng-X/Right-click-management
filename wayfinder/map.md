@@ -23,6 +23,7 @@ labels: [wayfinder:map]
 - 进行期修订（骨架验收反馈，2026-08-30）：**视觉语言由 Win11 Fluent 改为 Apple 式设计语言**（按 apple-design-zh 规范：材质半透明分层、按下即反馈、可打断过渡、排印纪律、reduced-motion/transparency 适配）；**布局不变**（仍是变体 A 三栏）；去掉应用内仿制标题栏（原生窗口框自带），工具栏合并为列表头上方轻材质层。前端架构改为静态骨架 + 局部更新，禁止全量重绘（用户反馈：点击整页刷新很难受）。
 - 进行期修订（视觉定版，同日）：采纳用户提供的 `design.html` 视觉（玻璃卡片流）——渐变背景上悬浮毛玻璃主容器、**两栏 + 底部状态栏**（详情面板取消，点卡片内联展开注册表位置）、iOS 弹簧开关与卡片悬停浮起；深色模式按同一语言适配（design.html 仅浅色）；开关与「+ 新增」先渲染为禁用态（操作后续工单接入，不放假控件）；覆盖式滚动条（隐形→滚动/悬停浮现细条）。布局血统仍源自变体 A（侧栏筛选 + 列表主区）。
 - 进行期修订（分类与来源，同日）：导航分类定为两个用户场景——**文件右键 / 桌面右键**（由挂载点推导，取代挂载点直译）；卡片直标**来源应用**（后端推导：动词 = 命令行 exe 名，shellex = CLSID→DLL 所在目录名，失败回退挂接键名），展开详情补命令行字段。CONTEXT.md 的「适用场景」「来源」术语已同步。
+- 进行期修订（免重启刷新，同日）：写操作成功后自动广播 `SHChangeNotify(SHCNE_ASSOCCHANGED)` 刷新菜单缓存——**动词与 Blocked 类改动一般免重启即时生效**，重启资源管理器降级为兜底手段（徽章文案改为「菜单没变化？」）；经典菜单开关是进程级 DLL 切换，仍必须重启。
 - 技能约定：research 工单调用 "research"；prototype 工单调用 "prototype" 与 "frontend-design"；grilling 工单调用 "grilling" 与 "domain-modeling"。
 - Tracker 为本地 markdown：地图即本文件；工单在 `wayfinder/tickets/`；认领/阻塞/状态看工单 front-matter（`status: open|closed`、`assignee`、`blocked-by`）。叙述时用工单名，不用裸 id。
 

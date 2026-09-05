@@ -20,13 +20,17 @@ fn set_entry_enabled(
     enabled: bool,
     name: String,
 ) -> Result<(), String> {
-    registry::set_entry_enabled(&reg_path, &kind, &clsid, enabled, &name)
+    registry::set_entry_enabled(&reg_path, &kind, &clsid, enabled, &name)?;
+    registry::notify_shell_changed();
+    Ok(())
 }
 
 /// 删除（断开挂接，删除前强制导出 .reg + 子树前像快照）
 #[tauri::command]
 fn delete_entry(reg_path: String, kind: String, name: String) -> Result<(), String> {
-    registry::delete_entry(&reg_path, &kind, &name)
+    registry::delete_entry(&reg_path, &kind, &name)?;
+    registry::notify_shell_changed();
+    Ok(())
 }
 
 /// 重启资源管理器（待生效改动落地）
@@ -69,7 +73,9 @@ fn create_manual_snapshot() -> Result<(), String> {
 /// 新增自定义菜单项（HKCU，v1 只进经典菜单）
 #[tauri::command]
 fn create_custom_entry(name: String, command: String, icon: String, scene: String) -> Result<(), String> {
-    registry::create_custom_entry(&name, &command, &icon, &scene)
+    registry::create_custom_entry(&name, &command, &icon, &scene)?;
+    registry::notify_shell_changed();
+    Ok(())
 }
 
 /// 编辑自定义菜单项（场景变化 = 旧位置删、新位置建，快照完全可逆）
@@ -81,7 +87,9 @@ fn update_custom_entry(
     icon: String,
     scene: String,
 ) -> Result<(), String> {
-    registry::update_custom_entry(&reg_path, &name, &command, &icon, &scene)
+    registry::update_custom_entry(&reg_path, &name, &command, &icon, &scene)?;
+    registry::notify_shell_changed();
+    Ok(())
 }
 
 /// 原生文件选择：选 exe/dll/ico 作为图标来源

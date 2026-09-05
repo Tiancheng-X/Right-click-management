@@ -513,7 +513,7 @@ listEl.addEventListener("change", async (ev) => {
     entry.enabled = on;
     pendingRestart = true;
     renderPending();
-    toast(`已${on ? "启用" : "禁用"}「${entry.name}」· 重启资源管理器后生效`, "ok");
+    toast(`已${on ? "启用" : "禁用"}「${entry.name}」· 一般立即生效；若菜单未变化，点击左侧徽章重启资源管理器`, "ok");
   } catch (err) {
     input.checked = !on; // 回滚开关
     toast(`操作失败：${String(err)}`, "err");
@@ -623,7 +623,7 @@ listEl.addEventListener("click", async (ev) => {
         pendingRestart = true;
         renderPending();
         renderList();
-        toast(`已删除「${entry?.name ?? key}」· 已导出 .reg 备份，可在快照历史还原`, "ok");
+        toast(`已删除「${entry?.name ?? key}」· 已导出 .reg 备份，可在快照历史还原；一般立即生效`, "ok");
       } catch (err) {
         confirmDelKey = null;
         refreshSide(key);
@@ -753,7 +753,7 @@ async function saveModal(): Promise<void> {
     pendingRestart = true;
     renderPending();
     await load();
-    toast(`已${modalMode === "create" ? "新增" : "更新"}「${name}」· 重启资源管理器后生效`, "ok");
+    toast(`已${modalMode === "create" ? "新增" : "更新"}「${name}」· 一般立即生效；若菜单未变化，点击左侧徽章重启资源管理器`, "ok");
   } catch (err) {
     toast(`保存失败：${String(err)}`, "err");
   }
